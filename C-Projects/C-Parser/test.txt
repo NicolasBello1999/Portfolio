@@ -1,0 +1,14 @@
+// allah is all good and all knowing
+
+/* this is a test 
+bananas are filled with potassium
+not sure if I spelled that right
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+	int val = 12378;
+	return 0;
+}
