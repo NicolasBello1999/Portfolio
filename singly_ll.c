@@ -19,6 +19,7 @@ void printLL(node *head); // print out our LL
 
 // functions that tackle interesting questions
 node *insert_y_after_x(node *head, int x, int y);
+node *insert_inOrder(node *head, int data);
 
 int main(int argc, char const *argv[])
 {
@@ -32,7 +33,8 @@ int main(int argc, char const *argv[])
         printf("Enter a value: ");
         scanf("%d", &value);
         //ll = createLL_insertByHead(ll, value);
-        ll = createLL_insertByTail(ll, value);
+        //ll = createLL_insertByTail(ll, value);
+        ll = insert_inOrder(ll, value);
     }
     printLL(ll);
 
@@ -82,6 +84,8 @@ void printLL(node *head) {
     }
 }
 
+/* insert a new node with the value y after a node with x value; so if y = 100 and x = 8, 
+   we insert a new node with value 100 after a node with value 8. */
 node *insert_y_after_x(node *head, int x, int y) {
     node *iter = head;
     node *hold;
@@ -96,6 +100,31 @@ node *insert_y_after_x(node *head, int x, int y) {
         }
         iter = iter->next;
     }
+
+    return head;
+}
+
+// insert data in ascending order meaning that the head will have the lowest value and the tail will have the greatest value
+node *insert_inOrder(node *head, int data) {
+    node *temp = (node*)malloc(sizeof(node));
+    temp->data = data;
+    temp->next = NULL;
+    node *iter = head, *hold;
+
+    if (head == NULL) return temp;
+
+    if (head->data > data) { // if the head is greater than our current value
+        temp->next = iter;
+        return temp;
+    }
+
+    // we want to hold the node that less than our new node but the node ahead is greater than our new node as well, also checking for NULLs 
+    while (iter->next->data < data && iter->next != NULL)
+        iter = iter->next;
+
+    hold = iter->next;
+    iter->next = temp;
+    temp->next = hold;
 
     return head;
 }
