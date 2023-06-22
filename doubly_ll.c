@@ -85,13 +85,14 @@ node *createLL_insertByTail(node *head, int data) {
 node* deleteNode(node *head, int index) {
     node *del, *hold, *iter = head;
 
-    while (iter != NULL) {
+    while (iter->next != NULL) {
         if (iter->next->data == index) {
             del = iter->next;
             hold = iter->next->next;
             iter->next = hold;
             hold->prev = iter;
             free(del);
+            nodeAmount--;
         }
         iter = iter->next;
     }
