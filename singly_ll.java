@@ -101,22 +101,3 @@ public class singly_ll {
         objHead.printLL(objHead.head);
     }
 }
-
-/*class compile {
-    public static void main(String[] args) {
-        singly_ll objHead = new singly_ll();
-
-        objHead.head = objHead.createLL_insertByHead(objHead.head, 5);
-        objHead.head = objHead.createLL_insertByHead(objHead.head, 5);
-        objHead.head = objHead.createLL_insertByHead(objHead.head, 43);
-        objHead.head = objHead.createLL_insertByHead(objHead.head, 97);
-        objHead.head = objHead.createLL_insertByHead(objHead.head, 5);
-        objHead.head = objHead.createLL_insertByHead(objHead.head, 2);
-
-        objHead.printLL(objHead.head);
-
-        objHead.head = objHead.insert_y_after_x(objHead.head, 5, 81);
-
-        objHead.printLL(objHead.head);
-    }
-}*/
