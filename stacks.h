@@ -15,6 +15,7 @@ struct node {
 void push(node **head, int data);
 int pop(node **head);
 int peek(node **head);
+void freeStack(node **stack);
 void printStack(node **head);
 
 // push new data into the stack (gets inserted at the head of the linked list therefore following LIFO principle)
@@ -63,5 +64,15 @@ void printStack(node **head) {
         printf("|%-5d|\n", iter->data);
         printf("o-----o\n");
         iter = iter->next;
+    }
+}
+
+void freeStack(node **stack) {
+    node *temp = *stack;
+    node *iter = NULL;
+    while (temp != NULL) {
+        iter = temp->next;
+        free(temp);
+        temp = iter;
     }
 }
