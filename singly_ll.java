@@ -1,14 +1,21 @@
 public class singly_ll {
     public Node head;
 
-    class Node {
-        int data;
-        Node next;
+    public static void main(String[] args) {
+        singly_ll objHead = new singly_ll();
 
-        public Node(Node next, int data) {
-            this.data = data;
-            this.next = next;
-        }
+        objHead.head = objHead.createLL_insertByTail(objHead.head, 5);
+        objHead.head = objHead.createLL_insertByTail(objHead.head, 5);
+        objHead.head = objHead.createLL_insertByTail(objHead.head, 43);
+        objHead.head = objHead.createLL_insertByTail(objHead.head, 97);
+        objHead.head = objHead.createLL_insertByTail(objHead.head, 5);
+        objHead.head = objHead.createLL_insertByTail(objHead.head, 2);
+
+        objHead.printLL(objHead.head);
+
+        objHead.head = objHead.insert_y_after_x(objHead.head, 2, 81);
+
+        objHead.printLL(objHead.head);
     }
 
     Node createLL_insertByTail(Node head, int data) {
@@ -83,21 +90,14 @@ public class singly_ll {
             iter = iter.next;
         }
     }
+}
 
-    public static void main(String[] args) {
-        singly_ll objHead = new singly_ll();
+class Node {
+    int data;
+    Node next;
 
-        objHead.head = objHead.createLL_insertByTail(objHead.head, 5);
-        objHead.head = objHead.createLL_insertByTail(objHead.head, 5);
-        objHead.head = objHead.createLL_insertByTail(objHead.head, 43);
-        objHead.head = objHead.createLL_insertByTail(objHead.head, 97);
-        objHead.head = objHead.createLL_insertByTail(objHead.head, 5);
-        objHead.head = objHead.createLL_insertByTail(objHead.head, 2);
-
-        objHead.printLL(objHead.head);
-
-        objHead.head = objHead.insert_y_after_x(objHead.head, 2, 81);
-
-        objHead.printLL(objHead.head);
+    public Node(Node next, int data) {
+        this.data = data;
+        this.next = next;
     }
 }
