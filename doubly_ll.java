@@ -1,26 +1,65 @@
-class doubly_ll {
-    public Node head;
-    public Node tail;
+/*
+ * Very simple program displaying how doubly linked lists work. 
+ */
+
+import java.util.*;
+
+public class doubly_ll {
+    private Node head;
+    private Node tail;
 
     public static void main(String[] args) {
-        doubly_ll ll_head = new doubly_ll();
+        Scanner keyboard = new Scanner(System.in);
+        doubly_ll ll_obj = new doubly_ll();
+        int menuOption = 0;
+        boolean repetitionMode = false;
 
-        ll_head.head = ll_head.createLL_insertByTail(ll_head, 10);
-        ll_head.head = ll_head.createLL_insertByTail(ll_head, 15);
-        ll_head.head = ll_head.createLL_insertByTail(ll_head, 23);
+        do {
+            try {
+                menuOption = ll_obj.menu(keyboard);
+                switch (menuOption) {
+                    case 1:
+                        ll_obj.handleInput(ll_obj, keyboard, repetitionMode, 1);
+                        break;
+                    case 2:
+                        ll_obj.handleInput(ll_obj, keyboard, repetitionMode, 2);
+                        break;
+                    case 3:
+                        ll_obj.printLLForwards();
+                        break;
+                    case 4:
+                        ll_obj.printLLBackwards();
+                        break;
+                    case 5:
+                        ll_obj.sortLL();
+                        break;
+                    case 6:
+                        repetitionMode = !repetitionMode;
+                        System.out.printf("Repition mode status - [%s]\n", repetitionMode);
+                        break;
+                    case 7:
+                        System.out.println("Exiting program...");
+                        break;
+                }
+            } catch (NumberFormatException e) {
+                System.err.println(e);
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        } while (menuOption != 7);
 
-        printLLForwards(ll_head.head);
-        ll_head.printLLBackwards(ll_head.tail);
+        keyboard.close();
     }
 
-    Node createLL_insertByTail(doubly_ll ll_head, int data) {
+    // inserts data into the LL in FIFO type of fashion (Queues)
+    public void insertByTail(int data) {
         Node temp = new Node(data);
-        Node iter = ll_head.head;
+        Node iter = head;
 
-        if (ll_head.head == null) {
-            ll_head.head = temp;
-            ll_head.tail = temp;
-            return ll_head.head;
+        if (head == null) {
+            head = temp;
+            tail = temp;
+            return;
         }
 
         while (iter.next != null)
@@ -28,28 +67,128 @@ class doubly_ll {
         
         iter.next = temp;
         temp.prev = iter;
-        ll_head.tail = temp;
-
-        return ll_head.head;
+        tail = temp;
     }
 
-    public static void printLLForwards(Node head) {
-        Node iter = head;
+    // inserts data into the LL in LIFO type of fashion (Stacks)
+    public void insertByHead(int data) {
+        Node temp = new Node(data);
 
-        while (iter != null) {
-            System.out.printf("%d%s", head.data, (head.next != null) ? "->" : "\n");
+        if (head == null) {
+            head = temp;
+            tail = temp;
+            return;
+        }
+
+        temp.next = head;
+        head.prev = temp;
+        head = temp;
+    }
+
+    // handles user input and is our main method for entering information into our LL
+    public void handleInput(doubly_ll ll_obj, Scanner keyboard, boolean repetitionMode, int method) throws NumberFormatException {
+        String tempInput;
+        int input = 0;
+
+        do {
+            System.out.print("Enter a number: ");
+            tempInput = keyboard.nextLine();
+            input = Integer.parseInt(tempInput);
+
+            if (input != 999) {
+                if (method == 1)
+                    ll_obj.insertByTail(input);
+                else
+                    ll_obj.insertByHead(input);
+            }
+        } while (repetitionMode && input != 999);
+    }
+
+    // handles user input, used for our menu method, if user inputs anything other than a number we will throw an exception that'll be caught in main
+    public int handleInput(Scanner keyboard) throws NumberFormatException {
+        String tempInput;
+        int input = 0;
+
+        tempInput = keyboard.nextLine();
+        input = Integer.parseInt(tempInput);
+
+        return input;
+    }
+
+    // allows the user to choose what menu option they want and then return to main to call their respective methods based on user input
+    public int menu(Scanner keyboard) throws OutOfBounds {
+        int menuOption = 0;
+
+        System.out.flush();
+        System.out.println("================================");
+        System.out.println("List of options:");
+        System.out.println("1. Insert data by tail");
+        System.out.println("2. Insert data by head");
+        System.out.println("3. Print doubly LL forwards");
+        System.out.println("4. Print doubly LL backwards");
+        System.out.println("5. Sort doubly LL");
+        System.out.println("6. Toggle repetition mode");
+        System.out.println("7. Exit program");
+        System.out.println("================================");
+        System.out.print("Enter option: ");
+
+        menuOption = handleInput(keyboard);
+
+        if (menuOption < 1 || menuOption > 7)
+            throw new OutOfBounds(menuOption);
+
+        return menuOption;
+    }
+
+    // sort the LL in ascending order, uses a reworked version of bubble sort for the LL - O(n^2)
+    public void sortLL() {
+        Node iter = head, cur;
+        int temp;
+
+        while (iter.next != null) {
+            cur = iter;
+            while (cur != null) {
+                if (iter.data > cur.data) {
+                    temp = cur.data;
+                    cur.data = iter.data;
+                    iter.data = temp;
+                }
+                cur = cur.next;
+            }
             iter = iter.next;
         }
     }
 
-    public void printLLBackwards(Node tail) {
+    public void printLLForwards() {
+        if (head == null) {
+            System.out.println("\nLinked list is empty!");
+            return;
+        }
+
+        Node iter = head;
+
+        System.out.printf("Printing doubly LL Forwards:\nHead -> ");
+        while (iter != null) {
+            System.out.printf("%d%s", iter.data, (iter.next != null) ? " -> " : " -> NULL\n");
+            iter = iter.next;
+        }
+        System.out.println();
+    }
+
+    public void printLLBackwards() {
+        if (tail == null) {
+            System.out.println("\nLinked list is empty!");
+            return;
+        }
+
         Node iter = tail;
 
-        System.out.printf("Printing doubly LL backwards:\nTail->");
+        System.out.printf("Printing doubly LL Backwards:\nTail -> ");
         while (iter != null) {
-            System.out.printf("%d%s", head.data, (head.next != null) ? "->" : "\n");
+            System.out.printf("%d%s", iter.data, (iter.prev != null) ? " -> " : " -> NULL\n");
             iter = iter.prev;
         }
+        System.out.println();
     }
     
     class Node {
@@ -66,6 +205,12 @@ class doubly_ll {
             this.data = data;
             this.next = next;
             this.prev = prev;
+        }
+    }
+
+    class OutOfBounds extends Exception {
+        public OutOfBounds(Object error) {
+            System.err.println("ERROR! Input is not within menu option bounds...");
         }
     }
 }
