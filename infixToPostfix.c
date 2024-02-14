@@ -41,8 +41,8 @@ int main(int argc, char const *argv[])
     return 0;
 }
 
+// highest priority (besides paranthesises)
 int precedenceCheck(char operator) {
-    // highest priority (besides paranthesises)
     if (operator == '*' || operator == '/' || operator == '%')
         return 2;
     else if (operator == '+' || operator == '-')

@@ -143,17 +143,22 @@ public class doubly_ll {
     // sort the LL in ascending order, uses a reworked version of bubble sort for the LL - O(n^2)
     public void sortLL() {
         Node iter = head, cur;
+        boolean swapped;
         int temp;
 
         while (iter.next != null) {
+            swapped = false;
             cur = iter;
             while (cur != null) {
-                if (iter.data > cur.data) {
+                if (cur.data > iter.data) {
                     temp = cur.data;
                     cur.data = iter.data;
                     iter.data = temp;
+                    swapped = true;
                 }
                 cur = cur.next;
+
+                if (swapped) break;
             }
             iter = iter.next;
         }
