@@ -1,5 +1,6 @@
 public class employee {
     // employee information
+    private department dep;
     private String employeeName;
     private String employeeID;
 
