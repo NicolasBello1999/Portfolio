@@ -29,7 +29,7 @@ int main(int argc, char const *argv[])
     while (input[i] != '\n') {
         if (isalpha(input[i]) || isValidOperator(input[i]) == -1)
             fprintf(stderr, "ERROR: Invalid expression, please try again...\n");
-        else if (isValidOperator(input[i]) != 1)
+        else if (isValidOperator(input[i]) != 1 && isdigit(input[i] != 0))
             fprintf(stderr, "ERROR: Invalid symbol, please try again...\n");
 
         i++;
@@ -51,6 +51,7 @@ int precedenceCheck(char operator) {
         return 0;
 }
 
+// checks if a symbol is part of arithmetic operations or not
 int isValidOperator(char symbol) {
     if (symbol == '*' || symbol == '/' || symbol == '+' || symbol == '-' || symbol == '(' || symbol == ')')
         return 1;
@@ -58,6 +59,7 @@ int isValidOperator(char symbol) {
         return -1;
 }
 
+// basis of the program, converts basis of the program
 char *infixToPostfix(char *input) {
     int i = 0;
     char symbol = 'a';
@@ -126,8 +128,4 @@ char *infixToPostfix(char *input) {
 
 void postFixCalculator(char *postfix) {
 
-}
-
-void postFixSomething(int number) {
-    
 }
