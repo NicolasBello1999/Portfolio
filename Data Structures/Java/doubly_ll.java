@@ -70,6 +70,8 @@ public class doubly_ll {
         tail = temp;
     }
 
+    //public node insertByTailRec(int data)
+
     // inserts data into the LL in LIFO type of fashion (Stacks)
     public void insertByHead(int data) {
         Node temp = new Node(data);
