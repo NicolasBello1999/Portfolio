@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 #include <cstdlib>
 #include <string>
 #include <chrono>
@@ -17,12 +18,10 @@ void selectionSort(string arr[], int size);
 
 int *fillArrRand(int arr[], int size);
 
-int main(int argc, char *argv) {
+int main(int argc, char **argv) {
     int **arr, max, i;
     bool m_flag = false;
-    extern char *optarg; // used for getopt() to return the option argument value
-    extern char optind;  // used by getopt() to communicate how far it scanned the command line
-    char opt;
+    int opt;
 
     while ((opt = getopt(argc, argv, ":m")) != -1) {
         switch (opt) {
@@ -37,8 +36,9 @@ int main(int argc, char *argv) {
     if (!m_flag)
         max = 100000;
 
-    arr = new int[4][max];
+    // arr = new int[4][max];
     for (i = 0; i < 4; i++) {
+        arr[i] = (int*)malloc(sizeof(int) * max + 1);
         arr[i] = fillArrRand(arr[i], max);
     }
 
@@ -56,8 +56,8 @@ void swap(int *x, int *y) {
 int *bubbleSort(int arr[], int size) {
     int i, j, temp;
 
-    for (i = 0; i < n - 1; i++) {
-        for (j = 0; j < n - 1 - x; j++) {
+    for (i = 0; i < size - 1; i++) {
+        for (j = 0; j < size - 1 - i; j++) {
             if (arr[i] > arr[i + 1]) {
                 swap(arr[i], arr[i + 1]);
             }
@@ -104,7 +104,7 @@ int *fillArrRand(int arr[], int size) {
     
     srand((unsigned) time(NULL));
     for (i = 0; i < size; i++)
-        arr[i] = (rand() % max) + 1;
+        arr[i] = (rand() % 100) + 1;
     
     return arr;
 }
