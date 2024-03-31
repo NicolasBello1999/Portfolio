@@ -3,6 +3,20 @@
   "configurations": [
     {
         "type": "java",
+        "name": "TreeProgram",
+        "request": "launch",
+        "mainClass": "Trees.TreeProgram",
+        "projectName": "Portfolio_62c0befc"
+    },
+    {
+        "type": "java",
+        "name": "Queues",
+        "request": "launch",
+        "mainClass": "Queues",
+        "projectName": "Portfolio_62c0befc"
+    },
+    {
+        "type": "java",
         "name": "sorting",
         "request": "launch",
         "mainClass": "sorting",

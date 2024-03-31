@@ -54,19 +54,14 @@ public class doubly_ll {
     // inserts data into the LL in FIFO type of fashion (Queues)
     public void insertByTail(int data) {
         Node temp = new Node(data);
-        Node iter = head;
 
         if (head == null) {
-            head = temp;
-            tail = temp;
+            head = tail = temp;
             return;
         }
-
-        while (iter.next != null)
-            iter = iter.next;
         
-        iter.next = temp;
-        temp.prev = iter;
+        tail.next = temp;
+        temp.prev = tail;
         tail = temp;
     }
 
