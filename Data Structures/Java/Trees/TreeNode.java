@@ -8,8 +8,4 @@ public class TreeNode<T extends Comparable<T>> {
         this.left = this.right = null;
         this.data = data;
     }
-
-    public int compareTo(Object obj) {
-
-    }
 }

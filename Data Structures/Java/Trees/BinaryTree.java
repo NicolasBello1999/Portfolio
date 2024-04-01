@@ -1,11 +1,8 @@
 package Trees;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
-public class BinaryTree<T> {
+public class BinaryTree<T extends Comparable<T>> {
     private TreeNode<T> root;
 
     public BinaryTree() {
@@ -14,10 +11,10 @@ public class BinaryTree<T> {
 
     public TreeNode<T> insertNodeRec(TreeNode<T> node, T data) {
         if (node == null) {
-            return new TreeNode(data);
+            return new TreeNode<T>(data);
         }
 
-        if (data.compareTo(node.data) ) {
+        if (data.compareTo(node.data) > 0) {
             node.right = insertNodeRec(node.right, data);
         } else {
             node.left = insertNodeRec(node.left, data);
@@ -30,12 +27,12 @@ public class BinaryTree<T> {
 
     }
 
-    public TreeNode<T> deleteNode(TreeNode<T> node, int data) {
+    public TreeNode<T> deleteNode(TreeNode<T> node, T data) {
         if (node == null) return null;
 
-        if (data > node.data) { // if the target is in right subtree
+        if (data.compareTo(node.data) > 0) { // if the target is in right subtree
             node.right = deleteNode(node.right, data);
-        } else if (data < node.data) { // if the target is in left subtree
+        } else if (data.compareTo(node.data) < 0) { // if the target is in left subtree
             node.left = deleteNode(node.left, data);
         } else { // we found the key value for the node
             if (node.left == null && node.right == null) { // no children - case 1
@@ -60,7 +57,7 @@ public class BinaryTree<T> {
         return node;
     }
 
-    public TreeNode<T> findNode(TreeNode<T> node, int key) {
+    public TreeNode<T> findNode(TreeNode<T> node, T key) {
         if (node == null) return null;
 
         if (node.data == key) return node;
@@ -74,7 +71,7 @@ public class BinaryTree<T> {
     }
 
     // returns the number of edges (connections between nodes) from the node to the tree's root node (the root node will have a depth of 0)
-    public int depthOfNode(TreeNode<T> node, int data, int depth) {
+    public int depthOfNode(TreeNode<T> node, T data, int depth) {
         if (node == null) return -1;
 
         if (node.data == data) {
@@ -88,8 +85,8 @@ public class BinaryTree<T> {
     }
 
     // returns the number of edges from the longest path from the node to a leaf (a leaf node will have a height of 0)
-    public int heightOfNode(TreeNode<T> node, int x) {
-        TreeNode<T> target = findNode(node, x);
+    public int heightOfNode(TreeNode<T> node, T key) {
+        TreeNode<T> target = findNode(node, key);
 
         if (target == null) return -1;
 
@@ -136,33 +133,38 @@ public class BinaryTree<T> {
         }
     }*/
 
-    private List<Integer> treeToArray(TreeNode<T> root) {
-        List<Integer> result = new ArrayList<>();
-        if (root == null) return result;
+    // private List<T> treeToArray(TreeNode<T> root) {
+    //     List<T> result = new ArrayList<>();
+    //     if (root == null) return result;
         
-        Queue<TreeNode<T>> queue = new LinkedList<>();
-        queue.add(root);
+    //     Queue<TreeNode<T>> queue = new LinkedList<>();
+    //     queue.add(root);
         
-        while (!queue.isEmpty()) {
-            TreeNode<T> node = queue.poll();
-            if (node == null) {
-                result.add(-1); // Placeholder for missing node
-                continue;
-            }
-            result.add(node.data);
+    //     while (!queue.isEmpty()) {
+    //         TreeNode<T> node = queue.poll();
+    //         if (node == null) {
+    //             result.add(-1); // Placeholder for missing node
+    //             continue;
+    //         }
+    //         result.add(node.data);
             
-            queue.add(node.left);
-            queue.add(node.right);
-        }
+    //         queue.add(node.left);
+    //         queue.add(node.right);
+    //     }
         
-        return result;
+    //     return result;
+    // }
+
+    public void printTree(TreeNode<T> node) {
+        printInOrder(node);
+        System.out.println();
     }
 
-    public void printInOrder(TreeNode<T> node) {
+    private void printInOrder(TreeNode<T> node) {
         if (node == null) return;
 
         printInOrder(node.left);
-        System.out.printf("%d%s,", node.data, (node == this.root) ? "-root" : "");
+        System.out.printf("%d%s", node.data, (node == this.root) ? "-root, " : ", ");
         printInOrder(node.right);
     }
     
