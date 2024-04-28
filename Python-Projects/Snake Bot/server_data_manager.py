@@ -6,9 +6,12 @@ server_data = {}
 script_dir = os.path.dirname(os.path.abspath(__file__))
 
 # construct the file path for the JSON file
-json_file_path = os.path.join(script_dir, 'server_channels.json')
+json_file_path = os.path.join(script_dir, 'server_data.json')
 
-# load server_channels.json at the start
+def get_server_list() -> list:
+    return server_data
+
+# load server_data.json at the start
 def on_startup_JSON() -> None:
     try:
         with open(json_file_path, 'r') as file:
@@ -26,30 +29,32 @@ def save_server_channels() -> None:
     with open(json_file_path, 'w') as file:
         json.dump(server_data, file, indent=4)
 
-def add_server_channels(server_id: int, channel_id: int) -> None:
-    if str(server_id) in server_data:
-        if channel_id not in server_data[str(server_id)]:
-            server_data[str(server_id)].append(channel_id)
-            with open("server_channels.json", "w") as file:
-                json.dump(server_data, file, indent=4)
-            print(f"Channel ID [{channel_id}] has been added to the list for Server ID [{server_id}]...")
+# when a user does the ">>this" command, it will check if the current channel has been added to the server's list of acceptable channels to play the game
+def add_channel_to_server(server_id: int, channel_id: int) -> bool:
+    if channel_id not in server_data[str(server_id)]["channel_ids"]:
+        server_data[str(server_id)]["channel_ids"].append(channel_id)
+        return True
     else:
-        server_data[str(server_id)] = [channel_id]
-        with open("server_channels.json", "w") as file:
-            json.dump(server_data, file, indent=4)
-        print(f"Server ID [{server_id}] and Channel ID [{channel_id}] has been added to the list...")
+        return False
 
-def create_data_table(server_id: int, channel_id: int, users: list) -> None:
-    if server_id in server_data:
-        return
-    else:
-        server_data[server_id] = [{
-            "channel_id" : channel_id,
-            "server_users" : users
-        }]
+def create_data_table(server_id: int, users: list) -> None:
+    if str(server_id) not in server_data:
+        print(f"Creating data table for {server_id}...")
+        # If not, create a new entry for it
+        server_data[str(server_id)] = {
+            "channel_ids": [],
+            "users": {}
+        }
 
-    with open("server_data.json", "w") as file:
-        json.dump(server_data, file, indent=4)
+    # Add users to the server
+    for user in users:
+        # Initialize points only if the user doesn't exist
+        if str(user) not in server_data[str(server_id)]["users"]:
+            server_data[str(server_id)]["users"][str(user)] = {"points": 0}
+
+    # Save the updated data
+    with open(json_file_path, "w") as fp:
+        json.dump(server_data, fp, indent=4)
 
 def update_points(server_id: int, user_id: int, points: int) -> None:
     return

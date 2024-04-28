@@ -1,6 +1,6 @@
 from typing import Final
 from dotenv import load_dotenv
-from discord import Intents, Client, Message
+from discord import Intents, Client, Message, Member
 from discord.ext import commands
 import nlp, os, signal, server_data_manager as sdm
 
@@ -10,6 +10,7 @@ TOKEN: Final[str] = os.getenv('DISCORD_TOKEN')
 # setting up the bot's intents in-order to read client/user messages
 intents: Intents = Intents.default() # potentially might have to change it to .all()
 intents.message_content = True
+intents.members = True
 client: Client = Client(intents=intents)
 client = commands.Bot(command_prefix=">>", intents=intents) # set prefix for command calls which will be '>>'
 
@@ -28,7 +29,8 @@ async def this(ctx) -> None:
     server_id: int = ctx.guild.id
 
     try:
-        sdm.add_server_channels(server_id, channel_id)
+        if sdm.add_channel_to_server(server_id, channel_id):
+            print(f"Added {channel_id} to server id {server_id}")
     except Exception as e:
         print(f"Encountered error! [{e}]")
 
@@ -45,7 +47,7 @@ async def on_message(message: Message) -> None:
     if message.author == client.user: return
 
     # only check if messages are sent to a specific text channel named "better-snake" or if the channel id was added by command
-    if (message.channel.name != "better-snake") or (message.channel.id not in sdm.server_channels.get(str(message.guild.id), [])): 
+    if (message.channel.name != "better-snake") or (message.channel.id not in sdm.server_data.get(str(message.guild.id), [])):
         return
 
     # delete the duplicate message sent by the same user
@@ -78,7 +80,17 @@ async def on_message(message: Message) -> None:
 @client.event
 async def on_ready() -> None:
     print(f"{client.user} is now running!") # notify the bot is running properly
+    sdm.on_startup_JSON() # open JSON file upon bot startup
 
+    for server in client.guilds: # loop through each server that the bot has access to
+        print(f"Connected to server : {server.name} = {server.id}")
+        sdm.create_data_table(server.id, server.members)
+
+# add member to the list when they join the server
+@client.event
+async def on_member_join() -> None:
+    return
+    
 # stop the bot gracefully on SIGINT (Ctrl + C) keys
 def handle_sigint(signum, frame):
     print("Stopping the bot gracefully")
