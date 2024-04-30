@@ -56,5 +56,10 @@ def create_data_table(server_id: int, users: list) -> None:
     with open(json_file_path, "w") as fp:
         json.dump(server_data, fp, indent=4)
 
-def update_points(server_id: int, user_id: int, points: int) -> None:
+def give_points(server_id: int, user_id: int, points: int) -> None:
+    server_data[str(server_id)]["users"][str(user_id)]["points"] += points
+    save_server_channels
     return
+
+def get_points(server_id: int, user_id: int) -> int:
+    return server_data[str(server_id)]["users"][str(user_id)]["points"]
