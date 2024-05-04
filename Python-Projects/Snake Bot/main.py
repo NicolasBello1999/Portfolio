@@ -1,8 +1,9 @@
 from typing import Final
 from dotenv import load_dotenv
-from discord import Intents, Client, Message, Member
+from discord import Intents, Client, Message
 from discord.ext import commands
 import nlp, os, signal, discord, server_data_manager as sdm
+from collections import defaultdict
 
 load_dotenv()
 TOKEN: Final[str] = os.getenv('DISCORD_TOKEN')
@@ -13,10 +14,38 @@ intents.message_content = True
 intents.members = True
 bot: Client = Client(intents=intents)
 bot = commands.Bot(command_prefix=">>", intents=intents) # set prefix for command calls which will be '>>'
+bot.remove_command('help')
 
+# ongoing checks and operations
 previous_word_dict: Message = {} # retain a dictionary of previous messages respective to their servers
 unique_words_used: str = [] # retain all unique words to assign points later on
+current_frozen_players = defaultdict(list)
+
+# final variables
 white_check_mark = "\U00002705" # ✅
+
+@bot.command()
+async def check(ctx, user: discord.Member):
+    server = current_frozen_players.get(ctx.guild.id)
+
+    if server:
+        for player in server:
+            if player["player"] == user:
+                await ctx.send(f"{user.display_name} is still frozen for the next {player['turns_frozen']} turns.")
+                return
+        await ctx.send(f"{user.display_name} is not frozen.")
+    else:
+        await ctx.send("No players are currently frozen.")
+
+@bot.command()
+async def help(ctx):
+    embed = discord.Embed(
+        title="List of Commands:",
+        description="freeze - stop a player from completing a word for the next x amount of turns.\npoints - check a user's current balance.\n",
+        color=discord.Color.dark_blue()
+    )
+    await ctx.send(embed=embed)
+    return
 
 # command to check for user's current point balance within their respective server or another user's points
 @bot.command()
@@ -24,35 +53,22 @@ async def points(ctx, user: discord.Member = None) -> None:
     if not user:
         embed = discord.Embed(
             description=f"{ctx.author.display_name} has {sdm.get_points(ctx.guild.id, ctx.author)} point(s).",
-            color = discord.Color.dark_blue()
+            color=discord.Color.dark_blue()
         )
         await ctx.send(embed=embed)
     else:
         embed = discord.Embed(
             description=f"{user.display_name} has {sdm.get_points(ctx.guild.id, user.name)} point(s).",
-            color = discord.Color.dark_blue()
+            color=discord.Color.dark_blue()
         )
         await ctx.send(embed=embed)
     return
 
-# @points.error
-# async def points_error(ctx, error):
-#     if isinstance(error, commands.MissingRequiredArgument):
-#         embed  = discord.Embed(
-#             title="ERROR!",
-#             description="Invalid user, please put `@User` next to `>>points`.",
-#             color = discord.Color.dark_blue()
-#         )
-#         await ctx.send(embed=embed)
-
 @bot.command()
 async def this(ctx) -> None:
-    channel_id: int = ctx.channel.id
-    server_id: int = ctx.guild.id
-
     try:
-        if sdm.add_channel_to_server(server_id, channel_id):
-            print(f"Added {channel_id} to server id {server_id}")
+        if sdm.add_channel_to_server(ctx.guild.id, ctx.channel.id):
+            print(f"Added {ctx.channel.id} to server id {ctx.guild.id}")
     except Exception as e:
         print(f"Encountered error! [{e}]")
 
@@ -61,8 +77,42 @@ async def wipe(ctx) -> None:
     await ctx.channel.purge(limit=100)
 
 @bot.command()
-async def freeze(ctx, user: discord.Member, length: int) -> None:
-    await ctx.send(f"Freezing {user.display_name} for the next {length} turns!")
+async def freeze(ctx, user: discord.Member, length: int=1) -> None:
+    user_points: int = sdm.get_points(ctx.guild.id, ctx.author)
+    if user_points >= length * 10:
+        sdm.deduct_points(ctx.guild.id, ctx.author, length * 10)
+        
+        if int(ctx.guild.id) in current_frozen_players.keys():
+            current_frozen_players[ctx.guild.id].append({"player": user, "turns_frozen": length})
+        else:
+            current_frozen_players[ctx.guild.id] = [{"player": user, "turns_frozen": length}]
+
+        print(f"Player {user.display_name} has been frozen for {length} turns.")
+
+        embed = discord.Embed(
+            description=f"Freezing {user.display_name} for the next {length} turns!",
+            color=discord.Color.dark_blue()
+        )
+        await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(
+            description=f"Not enough points, you need {length * 10} while you have {user_points} point(s).",
+            color=discord.Color.dark_blue()
+        )
+        await ctx.send(embed=embed)
+
+@bot.command()
+@commands.is_owner()
+async def force_points(ctx, user: discord.Member, points: int=100):
+    """Forces a certain amount of points to be given to a player."""
+    sdm.give_points(ctx.guild.id, user.name, points)
+    embed = discord.Embed(
+            title="God's Gift?!?",
+            description=f"Gave {points} points to {user.display_name}.",
+            color=discord.Color.dark_blue()
+        )
+    await ctx.send(embed=embed)
+    return
 
 # handle incoming user messages
 @bot.event
@@ -84,16 +134,22 @@ async def on_message(message: Message) -> None:
     accepted_word: bool = False
 
     # delete the message sent by the same user if it's twice in a row (within their respective server)
-    #if previous_word_dict[int(message.guild.id)] != None:
-    if message.guild.id in previous_word_dict.keys():
-        if previous_word_dict[int(message.guild.id)].author == message.author:
-            await message.delete()
-            return
+    if any(player["player"] == message.author for player in current_frozen_players.get(message.guild.id, [])):
+        await message.delete()
+
+        # remove player from current_frozen_players if they are no longer frozen
+        current_frozen_players[message.guild.id] = [player for player in current_frozen_players.get(message.guild.id, []) if player["turns_frozen"] > 1]
+        return
     
     message_content: str = message.content.strip()
 
     # if the word isn't part of the English dictionary then delete the word
     if nlp.is_valid_word(message_content) == False:
+        await message.delete()
+        return
+    
+    # check if the player is currently frozen, if they are then prevent them from typing
+    if any(player["player"] == message.author for player in current_frozen_players.get(message.guild.id, [])):
         await message.delete()
         return
     
@@ -109,37 +165,17 @@ async def on_message(message: Message) -> None:
     
     if accepted_word:
         await message.add_reaction(white_check_mark)
+
+        if message_content in unique_words_used: # give 1 point if the word isn't unique since its in the list
+            sdm.give_points(message.guild.id, message.author, points=1)
+        else: # if the word isn't in the list, then the word was unique and should be added to the list, user gets 2 points
+            sdm.give_points(message.guild.id, message.author, points=2)
+            unique_words_used.append(message_content)
+
         previous_word_dict[int(message.guild.id)] = message
-        sdm.give_points(message.guild.id, message.author, points=1)
-        unique_words_used.append(message_content)
-
-    # delete the duplicate message sent by the same user
-    # if previous_word_dict != None:
-    #     if previous_word_dict.author == message.author:
-    #         await message.delete()
-    #         return
-
-    # user_message: str = message.content.strip()
-
-    # if previous_word_dict == None:
-    #     if nlp.is_valid_word(user_message):
-    #         await message.add_reaction(white_check_mark)
-    #         accepted_word = True
-    # else:
-    #     if (nlp.is_valid_word(user_message)):
-    #         if (nlp.check_letters(previous_word_dict.content.strip(), user_message)):
-    #             await message.add_reaction(white_check_mark)
-    #             accepted_word = True
-    #         else:
-    #             await message.delete()
-    #     else:
-    #         await message.delete()
-
-    # if accepted_word:
-    #     # previous_word_dict[int(message.guild.id)] = message
-    #     previous_word_dict = message # update the previous word to be the new
-    #     sdm.earned_points(message.guild.id , message.author, points=1)
-    #     unique_words_used.append(user_message)
+        for player_frozen in current_frozen_players.get(message.guild.id, []):
+            if player_frozen["turns_frozen"] > 0:
+                player_frozen["turns_frozen"] -= 1
 
 # on bot start up
 @bot.event
@@ -151,26 +187,34 @@ async def on_ready() -> None:
         print(f"Connected to server : {server.name} = {server.id}")
         sdm.create_data_table(server.id, server.members)
 
-# add member to the list when they join the server
+# when the bot joins a new server
 @bot.event
-async def on_member_join() -> None:
-    return
+async def on_guild_join(guild: discord.Guild) -> None:
+    # create a new table within the JSON file for newly joined servers
+    sdm.create_data_table(guild.id, guild.members)
+
+# when a new member joins a server that the bot is apart of
+@bot.event
+async def on_member_join(member: discord.Member) -> None:
+    # add member to the list when they join the server
+    sdm.add_user(member.guild.id, member.author)
     
 # stop the bot gracefully on SIGINT (Ctrl + C) keys
 def handle_sigint(signum, frame):
     print("Stopping the bot gracefully")
-    sdm.save_server_channels()
+    sdm.save_server_data()
     bot.close()
+    exit()
 
-# main program to run our bot and all helper scripts
+# main program to run the bot and all helper scripts
 def main() -> None:
     try:
         signal.signal(signal.SIGINT, handle_sigint)
-        bot.run(TOKEN) # run our bot
+        bot.run(TOKEN) # run the bot
     except Exception as e:
         print(e)
     finally:
-        sdm.save_server_channels() # as backup in case we crash for some reason
+        sdm.save_server_data() # as backup in case we crash for some reason
 
 __name__ = "__main__"
 main()

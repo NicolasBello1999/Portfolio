@@ -13,19 +13,20 @@ def get_server_list() -> list:
 
 # load server_data.json at the start
 def on_startup_JSON() -> None:
+    global server_data
     try:
         with open(json_file_path, 'r') as file:
-            server_channels = json.load(file)
+            server_data = json.load(file)
     except FileNotFoundError:
-        server_channels = {}
+        server_data = {}
 
         # Write the empty dictionary to the JSON file
         with open(json_file_path, 'w') as file:
-            json.dump(server_channels, file)
+            json.dump(server_data, file)
     except Exception as e:
         print(e)
 
-def save_server_channels() -> None:
+def save_server_data() -> None:
     with open(json_file_path, 'w') as file:
         json.dump(server_data, file, indent=4)
 
@@ -46,20 +47,37 @@ def create_data_table(server_id: int, users: list) -> None:
             "users": {}
         }
 
-    # Add users to the server
-    for user in users:
-        # Initialize points only if the user doesn't exist
-        if str(user) not in server_data[str(server_id)]["users"]:
-            server_data[str(server_id)]["users"][str(user)] = {"points": 0}
+        # Add users to the server
+        for user in users:
+            # Initialize points only if the user doesn't exist
+            if str(user) not in server_data[str(server_id)]["users"]:
+                server_data[str(server_id)]["users"][str(user)] = {"points": 0,
+                                                                "turns_frozen": 0,
+                                                                "crowns": 0}
 
-    # Save the updated data
-    with open(json_file_path, "w") as fp:
-        json.dump(server_data, fp, indent=4)
+        # Save the updated data
+        with open(json_file_path, "w") as fp:
+            json.dump(server_data, fp, indent=4)
 
-def give_points(server_id: int, user_id: int, points: int) -> None:
-    server_data[str(server_id)]["users"][str(user_id)]["points"] += points
-    save_server_channels
+def give_points(server_id: int, username: int, points: int) -> None:
+    server_data[str(server_id)]["users"][str(username)]["points"] += points
+    save_server_data()
     return
 
-def get_points(server_id: int, user_id: int) -> int:
-    return server_data[str(server_id)]["users"][str(user_id)]["points"]
+def get_points(server_id: int, username: int) -> int:
+    return server_data[str(server_id)]["users"][str(username)]["points"]
+
+def deduct_points(server_id: int, username: int, deduct_amount: int) -> None:
+    """Deduct points from the specified user."""
+    server_data[str(server_id)]["users"][str(username)]["points"] -= deduct_amount
+    save_server_data()
+    return
+
+def add_user(server_id: int, username: str) -> None:
+    """Add a new user to an existing server within the JSON file."""
+    if username not in server_data[str(server_id)]["users"]:
+        server_data[str(server_id)]["users"][username] = {"points": 0,
+                                                        "turns_frozen": 0,
+                                                        "crowns": 0}
+    save_server_data()
+    return
