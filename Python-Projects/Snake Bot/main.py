@@ -4,6 +4,7 @@ from discord import Intents, Client, Message
 from discord.ext import commands
 import nlp, os, signal, discord, server_data_manager as sdm
 from collections import defaultdict
+from flask import Flask, render_template
 
 load_dotenv()
 TOKEN: Final[str] = os.getenv('DISCORD_TOKEN')
@@ -15,6 +16,12 @@ intents.members = True
 bot: Client = Client(intents=intents)
 bot = commands.Bot(command_prefix=">>", intents=intents) # set prefix for command calls which will be '>>'
 bot.remove_command('help')
+
+web_app = Flask(__name__) # --------------------------IMPORTANT--------------------------
+
+@web_app.route('/')
+def home():
+    return render_template("home.html")
 
 # ongoing checks and operations
 previous_word_dict: Message = {} # retain a dictionary of previous messages respective to their servers
@@ -82,7 +89,7 @@ async def freeze(ctx, user: discord.Member, length: int=1) -> None:
     if user_points >= length * 10:
         sdm.deduct_points(ctx.guild.id, ctx.author, length * 10)
         
-        if int(ctx.guild.id) in current_frozen_players.keys():
+        if ctx.guild.id in current_frozen_players.keys():
             current_frozen_players[ctx.guild.id].append({"player": user, "turns_frozen": length})
         else:
             current_frozen_players[ctx.guild.id] = [{"player": user, "turns_frozen": length}]
@@ -210,6 +217,7 @@ def handle_sigint(signum, frame):
 def main() -> None:
     try:
         signal.signal(signal.SIGINT, handle_sigint)
+        # web_app.run(debug=True) # run Flask for web app interface
         bot.run(TOKEN) # run the bot
     except Exception as e:
         print(e)
